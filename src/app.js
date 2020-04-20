@@ -102,13 +102,13 @@ app.post('/address', (req, res) => {
   }
 
   // make sure first and last name are formatted correctly
-  if (firstName.match(/^[0-9]*$/)) {
+  if (firstName.match(/^(?=.*\d)/)) {
     return res
       .status(400)
       .send('First name must be letters only');
   }
 
-  if (lastName.match(/^[0-9]*$/)) {
+  if (lastName.match(/^(?=.*\d)/)) {
     return res
       .status(400)
       .send('Last name must be letters only');
@@ -120,7 +120,7 @@ app.post('/address', (req, res) => {
       .send('Address must be between 6 and 30 characters');
   }
 
-  if (city.match(/^[0-9]*$/)) {
+  if (city.match(/^(?=.*\d)/)) {
     return res
       .status(400)
       .send('City must only contain letters');
@@ -156,6 +156,23 @@ app.post('/address', (req, res) => {
     .status(201)
     .location(`http://localhost:8000/address/${id}`)
     .json(newAddress);
+});
+
+app.delete('/address/:addressId', (req, res) => {
+  const { addressId } = req.params;
+  const index = addresses.findIndex(a => a.id === addressId);
+
+  if (index === -1) {
+    return res
+      .status(404)
+      .send('Address not found');
+  }
+
+  addresses.splice(index, 1);
+
+  res
+    .status(204)
+    .end();
 });
 
 
