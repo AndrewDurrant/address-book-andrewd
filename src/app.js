@@ -33,16 +33,6 @@ app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-app.use((error, req, res, next) => { // eslint-disable-line no-unused-vars
-  let message; // eslint-disable-line no-unused-vars
-  if (NODE_ENV === 'production') {
-    message = 'Server error';
-  } else {
-    console.log(error);
-    message = error.message;
-  }
-  res.status(500).json({ error: error.message });
-});
 
 
 const addresses = [
@@ -80,7 +70,7 @@ app.get('/address', (req, res) => {
 app.use(function validateBearerToken(req, res, next) {
   const apiToken = process.env.API_TOKEN;
   const authToken = req.get('Authorization');
-
+  
   if (!authToken || authToken.split(' ')[1] !== apiToken) {
     logger.error(`Unauthorized request to path: ${req.path}`);
     return res.status(401).json({ error: 'Unauthorized request' });
@@ -90,82 +80,82 @@ app.use(function validateBearerToken(req, res, next) {
 
 app.post('/address', (req, res) => {
   const { firstName, lastName, address1, address2, city, state, zip } = req.body;
-
-
+  
+  
   // Check to see that all required fields were sent.
   if (!firstName) {
     return res
       .status(400)
       .send('First name required');
   }
-
+  
   if (!lastName) {
     return res
       .status(400)
       .send('Last name required');
   }
-
+  
   if (!address1) {
     return res
       .status(400)
       .send('Address required');
   }
-
+  
   if (!city) {
     return res
       .status(400)
       .send('City required');
   }
-
+  
   if (!state) {
     return res
       .status(400)
       .send('State required');
   }
-
+  
   if (!zip) {
     return res
       .status(400)
       .send('Zip code required');
   }
-
+  
   // make sure first and last name are formatted correctly
   if (firstName.match(/^(?=.*\d)/)) {
     return res
       .status(400)
       .send('First name must be letters only');
   }
-
+  
   if (lastName.match(/^(?=.*\d)/)) {
     return res
       .status(400)
       .send('Last name must be letters only');
   }
-
+  
   if (address1.length < 6 || address1.length > 30) {
     return res
       .status(400)
       .send('Address must be between 6 and 30 characters');
   }
-
+  
   if (city.match(/^(?=.*\d)/)) {
     return res
       .status(400)
       .send('City must only contain letters');
   }
-
+  
   if (state.length !== 2) {
     return res
       .status(400)
       .send('State must be exactly 2 letters');
   }
-
+  
   if (zip.length !== 5) {
     return res
       .status(400)
       .send('Zip must be a five digit number');
   }
-
+  
   const id = uuidv4();
   const newAddress = {
     id, 
@@ -177,9 +167,9 @@ app.post('/address', (req, res) => {
     state,
     zip
   };
-
+  
   addresses.push(newAddress);
-
+  
   res
     .status(201)
     .location(`http://localhost:8000/address/${id}`)
@@ -189,20 +179,31 @@ app.post('/address', (req, res) => {
 app.delete('/address/:addressId', (req, res) => {
   const { addressId } = req.params;
   const index = addresses.findIndex(a => a.id === addressId);
-
+  
   if (index === -1) {
     return res
       .status(404)
       .send('Address not found');
   }
-
+  
   addresses.splice(index, 1);
-
+  
   res
     .status(204)
     .end();
 });
 
+
+app.use((error, req, res, next) => { // eslint-disable-line no-unused-vars
+  let message; // eslint-disable-line no-unused-vars
+  if (NODE_ENV === 'production') {
+    message = 'Server error';
+  } else {
+    console.log(error);
+    message = error.message;
+  }
+  res.status(500).json({ error: error.message });
+});
 
 // if no route matches, return 404 with HTML page - Express default route
 
